@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="CorsoCS.API/CorsoCS.API.csproj" />
+  <Project Path="CorsoCS.Core/CorsoCS.Core.csproj" />
+  <Project Path="CorsoCS.Handlers/CorsoCS.Handlers.csproj" />
+  <Project Path="CorsoCS/CorsoCS.csproj" />
+</Solution>
