@@ -1,9 +1,10 @@
 using System.Globalization;
+using Axon;
+using CorsoCS.Core.DTO;
 using CorsoCS.Core.Query;
 using CorsoCS.Handlers.Model;
 using MapZilla;
 using MapZilla.QueryableExtensions;
-using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Note = CorsoCS.Core.DTO.Note;
@@ -12,8 +13,9 @@ namespace CorsoCS.Handlers.CQRS.NoteHandlers;
 
 public class NoteQueryHandlers(DB db, IMapper mapper) :
   IRequestHandler<Core.Query.GetNote, Core.DTO.Note?>,
-  IRequestHandler<Core.Query.SearchNote, IEnumerable<Core.DTO.Note>>
+  IRequestHandler<Core.Query.SearchNote, PagedResults<Core.DTO.Note>>
 {
+  
   public async Task<Note?> Handle(GetNote request, CancellationToken cancellationToken)
   {
     var result = await db.Notes.Where(i => i.Id == request.Id)
@@ -41,7 +43,7 @@ public class NoteQueryHandlers(DB db, IMapper mapper) :
      */
   }
 
-  public async Task<IEnumerable<Note>> Handle(SearchNote request, CancellationToken cancellationToken)
+  public async Task<PagedResults<Note>> Handle(SearchNote request, CancellationToken cancellationToken)
   {
     var query = db.Notes.AsQueryable();
 
@@ -54,7 +56,16 @@ public class NoteQueryHandlers(DB db, IMapper mapper) :
     //   select n);
 
 
-    return await query.ProjectTo<Core.DTO.Note>(mapper.ConfigurationProvider)
-      .ToListAsync(cancellationToken);
+    var count = await query.CountAsync(cancellationToken);
+
+    return new PagedResults<Note>()
+    {
+      Items = await query.ProjectTo<Core.DTO.Note>(mapper.ConfigurationProvider)
+        .Skip(request.Page * request.PageSize)
+        .Take(request.PageSize)
+        .ToListAsync(cancellationToken),
+      Count = count,
+      CurrentPage = request.Page
+    };
   }
 }

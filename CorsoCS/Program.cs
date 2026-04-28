@@ -1,51 +1,61 @@
 
+using System.Reflection;
+using System.Text.Json.Serialization;
+using CorsoCS.API.Hubs;
 using CorsoCS.Handlers;
+using CorsoCS.Handlers.Model;
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly( typeof(MappingProfile).Assembly));
-builder.Services.AddMapZilla([typeof(MappingProfile)]);
-builder.Services.AddDbContext<CorsoCS.Handlers.Model.DB>(
-    opt => opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
-);
-
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+public partial class Program
 {
-    app.MapOpenApi();
-}
+	private static void Main(string[] args)
+	{
+		var builder = WebApplication.CreateBuilder(args);
 
-app.UseHttpsRedirection();
+		// Add services to the container.
+		// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+		builder.Services.AddOpenApi();
+		builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
+				p.AllowAnyHeader()
+				 .AllowAnyMethod()
+				 .SetIsOriginAllowed(_ => true)
+				 .AllowCredentials()
+		));
+		builder.Services.AddControllers();
+		builder.Services.AddAxon(cfg =>
+				cfg.RegisterServicesFromAssemblies([
+								typeof(MappingProfile).Assembly,
+						typeof(NotesHub).Assembly
+				]));
+		builder.Services.AddMapZilla([typeof(MappingProfile)]);
+		builder.Services.AddDbContext<DB>(
+				opt => opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
+		);
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+		builder.Services.AddSignalR();
 
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+		var app = builder.Build();
 
-app.Run();
+		using (var scope = app.Services.CreateScope())
+		{
+			using var db = scope.ServiceProvider.GetRequiredService<DB>();
+			// db.Database.EnsureCreated();
+			db.Database.Migrate();
+		}
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+
+		// Configure the HTTP request pipeline.
+		if (app.Environment.IsDevelopment())
+		{
+			app.MapOpenApi();
+		}
+
+		//app.UseHttpsRedirection();
+		app.UseCors();
+		app.MapScalarApiReference();
+		app.MapControllers();
+		app.MapHub<NotesHub>("hubs/notes");
+		app.Run();
+	}
 }

@@ -6,9 +6,11 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.4" />
-    <PackageReference Include="MediatR" Version="12.5.0" />
+    <PackageReference Include="AxonFlow" Version="9.4.1" />
+    <PackageReference Include="AxonFlow.Flow.RabbitMQ" Version="9.4.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.5" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.13.22" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CorsoCS.API\CorsoCS.API.csproj" />

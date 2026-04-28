@@ -1,4 +1,4 @@
-using MediatR;
+using Axon;
 
 namespace CorsoCS.Core.Query;
 

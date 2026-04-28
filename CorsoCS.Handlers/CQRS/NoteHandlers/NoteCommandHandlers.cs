@@ -1,18 +1,22 @@
-using MediatR;
+using Axon;
 using CorsoCS.Core.Commands;
 using CorsoCS.Handlers.Model;
 using MapZilla;
 
 namespace CorsoCS.Handlers.CQRS.NoteHandlers;
 
-public class NoteCommandHandlers(DB db, IMapper mapper) :
+public class NoteCommandHandlers(
+  DB db,
+  IMapper mapper,
+  IAxon mediator) :
   IRequestHandler<CreateNote, Guid>
 {
   public async Task<Guid> Handle(CreateNote request, CancellationToken cancellationToken)
   {
-
     var note = mapper.Map<Model.Note>(request);
     note.Id = Guid.CreateVersion7();
+    note.UserName = "system";
+    note.Flagged = false;
     // var note = new Note()
     // {
     //   Body = request.Body,
@@ -23,7 +27,12 @@ public class NoteCommandHandlers(DB db, IMapper mapper) :
     db.Notes.Add(note) ;
     await db.SaveChangesAsync(cancellationToken);
 
-    return note.Id;
+    await mediator.Publish(new Core.Notifications.NoteCreated()
+    {
+      Id = note.Id
+    }, cancellationToken);
 
+
+    return note.Id;
   }
 }
