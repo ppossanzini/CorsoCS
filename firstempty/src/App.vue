@@ -112,5 +112,9 @@ body,
     box-sizing: border-box;
     text-align: center;
   }
+
+  *{
+    transition: transform .5s ease-out;
+  }
 }
 </style>
