@@ -34,7 +34,8 @@ public partial class Program
 		);
 
 		builder.Services.AddSignalR();
-
+		builder.Services.AddHostedService<AxesPLCMock>();
+		
 		var app = builder.Build();
 
 		using (var scope = app.Services.CreateScope())

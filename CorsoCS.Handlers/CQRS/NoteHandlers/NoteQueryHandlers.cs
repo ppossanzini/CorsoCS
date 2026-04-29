@@ -47,13 +47,13 @@ public class NoteQueryHandlers(DB db, IMapper mapper) :
   {
     var query = db.Notes.AsQueryable();
 
-    if (request.Body != null) query = query.Where(i => i.Body.Contains(request.Body));
-    if (request.Title != null) query = query.Where(i => i.Title.Contains(request.Title));
+    // if (request.Body != null) query = query.Where(i => i.Body.Contains(request.Body));
+    // if (request.Title != null) query = query.Where(i => i.Title.Contains(request.Title));
 
-    // query = (from n in db.Notes
-    //   where (request.Body == null || n.Body.Contains(request.Body)) &&
-    //         (request.Title == null || n.Title.Contains(request.Title))
-    //   select n);
+    query = (from n in db.Notes
+      where (request.Body == null || n.Body.Contains(request.Body)) ||
+            (request.Title == null || n.Title.Contains(request.Title))
+      select n);
 
 
     var count = await query.CountAsync(cancellationToken);

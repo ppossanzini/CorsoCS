@@ -7,7 +7,8 @@ namespace CorsoCS.API;
 
 public class NotificationHandler(
   IHubContext<NotesHub> notesContext) :
-  INotificationHandler<Core.Notifications.NoteCreated>
+  INotificationHandler<Core.Notifications.NoteCreated>, 
+  INotificationHandler<Core.Notifications.AxesUpdated>
 {
   public Task Handle(
     NoteCreated notification,
@@ -17,5 +18,11 @@ public class NotificationHandler(
     notesContext.Clients.Groups(nameof(Core.Notifications.NoteCreated))
       .SendAsync("noteCreated", notification, cancellationToken);
     
+  }
+
+   public Task Handle(AxesUpdated notification, CancellationToken cancellationToken)
+  {
+    return notesContext.Clients.All
+      .SendAsync("axesUpdated", notification, cancellationToken);
   }
 }
